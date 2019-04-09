@@ -17,6 +17,7 @@ import com.example.hwt.testapp.Behavior.CollectionHelper;
 import com.example.hwt.testapp.R;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import me.kaelaela.verticalviewpager.VerticalViewPager;
@@ -50,10 +51,12 @@ public class DetailActivity extends AppCompatActivity {
     private static class Adapter extends PagerAdapter {
         private List<ImgTmp> imgTmps;
         private Context context;
+        private List<ViewHolder> viewHolders;
 
         public Adapter(Context context, @NonNull List<ImgTmp> imgTmps) {
             this.context = context;
             this.imgTmps = imgTmps;
+            this.viewHolders = new LinkedList<>();
         }
 
         @Override
@@ -63,20 +66,31 @@ public class DetailActivity extends AppCompatActivity {
 
         @Override
         public boolean isViewFromObject(@NonNull View view, @NonNull Object o) {
-            return view == o;
+            ViewHolder viewHolder = (ViewHolder) o;
+            return view == viewHolder.getContentView();
         }
 
         @NonNull
         @Override
         public Object instantiateItem(@NonNull ViewGroup container, int position) {
-            LayoutInflater inflater = LayoutInflater.from(context);
-            View root = inflater.inflate(R.layout.view_detail_item, container, false);
-            ViewHolder viewHolder = new ViewHolder(root);
+            ViewHolder viewHolder;
+            if (viewHolders.size() == 0) {
+                LayoutInflater inflater = LayoutInflater.from(context);
+                View root = inflater.inflate(R.layout.view_detail_item, container, false);
+                viewHolder = new ViewHolder(root);
+            } else {
+                viewHolder = viewHolders.remove(0);
+            }
             viewHolder.bind(imgTmps.get(position));
-            return root;
+            return viewHolder;
         }
 
-
+        @Override
+        public void destroyItem(@NonNull ViewGroup container, int position, @NonNull Object object) {
+            ViewHolder viewHolder = (ViewHolder) object;
+            container.removeView(viewHolder.getContentView());
+            viewHolders.add(viewHolder);
+        }
     }
 
     private static class ViewHolder implements View.OnClickListener {
@@ -121,6 +135,10 @@ public class DetailActivity extends AppCompatActivity {
             if (imgTmp != null) {
                 CollectionHelper.collect(imgTmp.getImgUrl());
             }
+        }
+
+        public View getContentView() {
+            return root;
         }
     }
 }
