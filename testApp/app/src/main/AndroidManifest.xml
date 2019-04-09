@@ -3,6 +3,7 @@
     package="com.example.hwt.testapp">
 
     <application
+        android:name=".GApplication"
         android:allowBackup="true"
         android:icon="@drawable/slogo"
         android:label="@string/app_name"

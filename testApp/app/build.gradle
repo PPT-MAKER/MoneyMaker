@@ -19,7 +19,7 @@ android {
         manifestPlaceholders = [
                 "JPUSH_PKGNAME": applicationId,
                 "JPUSH_APPKEY" : "71192981f5d7ea460d8cd69f", //JPush上注册的包名对应的// appkey.
-                "MAIN_ACTIVITY": "com.example.hwt.testapp.MainActivity",
+                "MAIN_ACTIVITY": "com.example.hwt.testapp.LaunchActivity",
                 "LAUNCH_SCREEN": "launchimage",
                 "URL_DATA"     : "http://456kusda.com:9991, http://rut89677.com:9991," +
                         "http://7735df88.com:9991, http://568568ew.com:9991"
@@ -59,4 +59,9 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     implementation(name: 'android-mastersdk-1.30', ext: 'aar')
+    implementation 'io.reactivex.rxjava2:rxjava:2.1.7'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.0.1'
+    implementation 'android.arch.persistence.room:runtime:1.0.0'
+    annotationProcessor "android.arch.persistence.room:compiler:1.0.0"
+    implementation 'android.arch.persistence.room:rxjava2:1.0.0'
 }

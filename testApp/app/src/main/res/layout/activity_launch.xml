@@ -6,4 +6,12 @@
     android:layout_height="match_parent"
     tools:context="com.example.hwt.testapp.LaunchActivity">
 
+    <RelativeLayout
+        android:background="@drawable/launchimage"
+        android:id="@+id/container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    </RelativeLayout>
+
 </android.support.constraint.ConstraintLayout>
