@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 28
     defaultConfig {
-        applicationId "com.hwt.kxdwby"
+        applicationId "com.maker.ggtk"
         minSdkVersion 19
         //noinspection ExpiredTargetSdkVersion
         targetSdkVersion 22
@@ -13,15 +13,15 @@ android {
 
         ndk {
             //选择要添加的对应cpu类型的.so库。
-            abiFilters 'armeabi-v7a',"armeabi"
+            abiFilters 'armeabi-v7a', "armeabi"
         }
 
         manifestPlaceholders = [
-                "JPUSH_PKGNAME" :applicationId,
-                "JPUSH_APPKEY" : "8f4fda406a29d2ac91b713b6", //JPush上注册的包名对应的// appkey.
-                "MAIN_ACTIVITY" :"com.example.hwt.testapp.MainActivity",
-                "LAUNCH_SCREEN" :"launchimage",
-                "URL_DATA" :"http://456kusda.com:9991, http://rut89677.com:9991," +
+                "JPUSH_PKGNAME": applicationId,
+                "JPUSH_APPKEY" : "71192981f5d7ea460d8cd69f", //JPush上注册的包名对应的// appkey.
+                "MAIN_ACTIVITY": "com.example.hwt.testapp.MainActivity",
+                "LAUNCH_SCREEN": "launchimage",
+                "URL_DATA"     : "http://456kusda.com:9991, http://rut89677.com:9991," +
                         "http://7735df88.com:9991, http://568568ew.com:9991"
         ]
     }

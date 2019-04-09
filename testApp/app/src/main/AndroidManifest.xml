@@ -9,9 +9,10 @@
         android:roundIcon="@drawable/slogo"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.NoActionBar">
-        <activity android:name=".MainActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize">
-        </activity>
+        <activity android:name=".LaunchActivity"></activity>
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"></activity>
     </application>
 
 </manifest>
