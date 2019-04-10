@@ -1,11 +1,12 @@
 package com.example.hwt.testapp.spider.beans;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
  * 相册
  */
-public class AlbumBean {
+public class AlbumBean implements Serializable {
 
     private String name;
     private String coverUrl;
