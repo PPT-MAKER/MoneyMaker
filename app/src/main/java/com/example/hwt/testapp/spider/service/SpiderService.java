@@ -16,8 +16,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.Observable;
 
 public class SpiderService {
     private static final String BASE_URL = "http://sj.zol.com.cn";
@@ -26,7 +25,7 @@ public class SpiderService {
     /**
      * @param onAlbumGet 回调
      */
-    public static void getAlbum(final OnAlbumGet onAlbumGet) {
+    public static Observable<List<AlbumBean>> getAlbum(@Nullable OnAlbumGet onAlbumGet) {
         List<AlbumBean> caches = (List<AlbumBean>) SPUtil.getInstance().getObject(ALBUM_URL, new TypeToken<List<AlbumBean>>() {
         }.getType());
         if (!ListUtil.isEmpty(caches) && onAlbumGet != null) {
@@ -34,40 +33,31 @@ public class SpiderService {
             return;
         }
 
-        Schedulers.io().scheduleDirect(new Runnable() {
-            @Override
-            public void run() {
-                final List<AlbumBean> ret = new ArrayList<>();
-                Document document = request(ALBUM_URL);
-                if (document != null) {
-                    Elements selects = document.select("dd.brand-sel-box").get(1).select("a");
-                    if (selects != null) {
-                        Iterator<Element> iterator = selects.iterator();
-                        while (iterator.hasNext()) {
-                            Element next = iterator.next();
-                            AlbumBean albumBean = new AlbumBean();
-                            albumBean.setName(next.text());
-                            Document albumDetail = request(BASE_URL + next.attr("href"));
-                            if (albumDetail != null) {
-                                albumBean.setCoverUrl(getCover(albumDetail));
-                                albumBean.setAlbumDetailHref(getAlbumDetailHref(albumDetail));
-                            }
-                            ret.add(albumBean);
-                        }
+        List<AlbumBean> ret = new ArrayList<>();
+        Document document = request(ALBUM_URL);
+        if (document != null) {
+            Elements selects = document.select("dd.brand-sel-box").get(1).select("a");
+            if (selects != null) {
+                Iterator<Element> iterator = selects.iterator();
+                while (iterator.hasNext()) {
+                    Element next = iterator.next();
+                    AlbumBean albumBean = new AlbumBean();
+                    albumBean.setName(next.text());
+                    Document albumDetail = request(BASE_URL + next.attr("href"));
+                    if (albumDetail != null) {
+                        albumBean.setCoverUrl(getCover(albumDetail));
+                        albumBean.setAlbumDetailHref(getAlbumDetailHref(albumDetail));
                     }
+                    ret.add(albumBean);
                 }
-                if (onAlbumGet != null) {
-                    AndroidSchedulers.mainThread().scheduleDirect(new Runnable() {
-                        @Override
-                        public void run() {
-                            onAlbumGet.onAlbumGet(ret);
-                        }
-                    });
-                }
-
-                SPUtil.getInstance().cacheObject(ALBUM_URL, ret);
             }
-        });
+        }
+        if (onAlbumGet != null) {
+            onAlbumGet.onAlbumGet(ret);
+        }
+
+        SPUtil.getInstance().cacheObject(ALBUM_URL, ret);
+        return Observable.just(ret);
     }
 
     private static List<String> getAlbumDetailHref(Document albumDetail) {
@@ -89,7 +79,7 @@ public class SpiderService {
      * @param href       子相册的url AlbumBean.albumDetailHref
      * @param onPhotoGet 回调
      */
-    public static void getPhoto(final String href, final OnPhotoGet onPhotoGet) {
+    public static void getPhoto(String href, OnPhotoGet onPhotoGet) {
         List<PhotoBean> caches = (List<PhotoBean>) SPUtil.getInstance().getObject(href, new TypeToken<List<PhotoBean>>() {
         }.getType());
         if (!ListUtil.isEmpty(caches) && onPhotoGet != null) {
@@ -97,37 +87,27 @@ public class SpiderService {
             return;
         }
 
-        Schedulers.io().scheduleDirect(new Runnable() {
-            @Override
-            public void run() {
-                final List<PhotoBean> ret = new ArrayList<>();
-                Document request = request(href);
-                String attr = request.select("body > div:nth-child(4) > dl > dd > a:nth-child(1)").attr("href");
-                List<String> eachAttr = request.select("#showImg > li > a").eachAttr("href");
+        List<PhotoBean> ret = new ArrayList<>();
+        Document request = request(href);
+        String attr = request.select("body > div:nth-child(4) > dl > dd > a:nth-child(1)").attr("href");
+        List<String> eachAttr = request.select("#showImg > li > a").eachAttr("href");
 
-                for (String s : eachAttr) {
-                    String substring = s.substring(s.lastIndexOf("_") + 1, s.lastIndexOf("."));
-                    String photoDetail = BASE_URL + attr.replaceAll("_[0-9]*_", "_" + substring + "_");
-                    Document photoDetailDoc = request(photoDetail);
-                    if (photoDetailDoc != null) {
-                        String src = photoDetailDoc.select("body > img:nth-child(1)").attr("src");
-                        PhotoBean photoBean = new PhotoBean();
-                        photoBean.setUrl(src);
-                        ret.add(photoBean);
-                    }
-                }
-
-                if (onPhotoGet != null) {
-                    AndroidSchedulers.mainThread().scheduleDirect(new Runnable() {
-                        @Override
-                        public void run() {
-                            onPhotoGet.onPhotoGet(ret);
-                        }
-                    });
-                }
-                SPUtil.getInstance().cacheObject(href, ret);
+        for (String s : eachAttr) {
+            String substring = s.substring(s.lastIndexOf("_") + 1, s.lastIndexOf("."));
+            String photoDetail = BASE_URL + attr.replaceAll("_[0-9]*_", "_" + substring + "_");
+            Document photoDetailDoc = request(photoDetail);
+            if (photoDetailDoc != null) {
+                String src = photoDetailDoc.select("body > img:nth-child(1)").attr("src");
+                PhotoBean photoBean = new PhotoBean();
+                photoBean.setUrl(src);
+                ret.add(photoBean);
             }
-        });
+        }
+
+        if (onPhotoGet != null) {
+            onPhotoGet.onPhotoGet(ret);
+        }
+        SPUtil.getInstance().cacheObject(href, ret);
     }
 
     private static Document request(String url) {
@@ -145,11 +125,11 @@ public class SpiderService {
         return null;
     }
 
-    public interface OnAlbumGet {
+    interface OnAlbumGet {
         void onAlbumGet(List<AlbumBean> data);
     }
 
-    public interface OnPhotoGet {
+    interface OnPhotoGet {
         void onPhotoGet(List<PhotoBean> data);
     }
 
