@@ -17,20 +17,12 @@ import com.example.hwt.testapp.spider.service.SpiderService;
 import java.util.ArrayList;
 import java.util.List;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.Unbinder;
-import io.reactivex.Observable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
 public class MainFragment extends Fragment {
 
-    @BindView(R.id.list_view)
     RecyclerView mListView;
-
-    Unbinder mUnbinder;
 
     List<AlbumBean> mAlbumBeans = new ArrayList<>();
 
@@ -38,7 +30,6 @@ public class MainFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
-        mUnbinder = ButterKnife.bind(view);
         initData();
         return view;
     }
@@ -71,9 +62,4 @@ public class MainFragment extends Fragment {
 
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        mUnbinder.unbind();
-    }
 }

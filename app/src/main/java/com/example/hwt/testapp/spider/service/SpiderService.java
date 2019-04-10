@@ -1,5 +1,7 @@
 package com.example.hwt.testapp.spider.service;
 
+import android.support.annotation.Nullable;
+
 import com.example.hwt.testapp.ListUtil;
 import com.example.hwt.testapp.SPUtil;
 import com.example.hwt.testapp.spider.beans.AlbumBean;
@@ -16,7 +18,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import androidx.annotation.Nullable;
 import io.reactivex.Observable;
 
 public class SpiderService {
