@@ -16,6 +16,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import androidx.annotation.Nullable;
+import io.reactivex.Observable;
+
 public class SpiderService {
     private static final String BASE_URL = "http://sj.zol.com.cn";
     private static final String ALBUM_URL = BASE_URL + "/bizhi";
@@ -23,12 +26,12 @@ public class SpiderService {
     /**
      * @param onAlbumGet 回调
      */
-    public static void getAlbum(OnAlbumGet onAlbumGet) {
+    public static Observable<List<AlbumBean>> getAlbum(@Nullable OnAlbumGet onAlbumGet) {
         List<AlbumBean> caches = (List<AlbumBean>) SPUtil.getInstance().getObject(ALBUM_URL, new TypeToken<List<AlbumBean>>() {
         }.getType());
         if (!ListUtil.isEmpty(caches) && onAlbumGet != null) {
             onAlbumGet.onAlbumGet(caches);
-            return;
+            return Observable.just(caches);
         }
 
         List<AlbumBean> ret = new ArrayList<>();
@@ -55,6 +58,7 @@ public class SpiderService {
         }
 
         SPUtil.getInstance().cacheObject(ALBUM_URL, ret);
+        return Observable.just(ret);
     }
 
     private static List<String> getAlbumDetailHref(Document albumDetail) {
@@ -122,11 +126,11 @@ public class SpiderService {
         return null;
     }
 
-    interface OnAlbumGet {
+    public interface OnAlbumGet {
         void onAlbumGet(List<AlbumBean> data);
     }
 
-    interface OnPhotoGet {
+    public interface OnPhotoGet {
         void onPhotoGet(List<PhotoBean> data);
     }
 
