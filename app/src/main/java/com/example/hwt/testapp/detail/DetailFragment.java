@@ -23,6 +23,9 @@ import com.example.hwt.testapp.spider.service.SpiderService;
 import java.util.LinkedList;
 import java.util.List;
 
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 import me.kaelaela.verticalviewpager.VerticalViewPager;
 import me.kaelaela.verticalviewpager.transforms.DefaultTransformer;
 
@@ -50,26 +53,18 @@ public class DetailFragment extends Fragment {
         String url = getArguments().getParcelable(ALBUM);
         viewPager = root.findViewById(R.id.view_pager);
         viewPager.setPageTransformer(false, new DefaultTransformer());
-//        SpiderService.getPhoto(url, new SpiderService.OnPhotoGet() {
-//            @Override
-//            public void onPhotoGet(List<PhotoBean> data) {
-//                viewPager.setAdapter(new Adapter(getContext(), data));
-//                viewPager.setCurrentItem(0);
-//            }
-//        });
-
-        // 测试代码
-        SpiderService.getAlbum(new SpiderService.OnAlbumGet() {
+        SpiderService.getPhoto(url, null)
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(new Consumer<List<PhotoBean>>() {
             @Override
-            public void onAlbumGet(List<AlbumBean> data) {
-                SpiderService.getPhoto(data.get(0).getAlbumDetailHref().get(0), new SpiderService.OnPhotoGet() {
-                    @Override
-                    public void onPhotoGet(List<PhotoBean> data) {
-                        Log.d(">>>>>>", "get ablum");
-                        viewPager.setAdapter(new Adapter(getContext(), data));
-                        viewPager.setCurrentItem(0);
-                    }
-                });
+            public void accept(List<PhotoBean> photoBeans) throws Exception {
+                viewPager.setAdapter(new Adapter(getContext(), photoBeans));
+            }
+        }, new Consumer<Throwable>() {
+            @Override
+            public void accept(Throwable throwable) throws Exception {
+
             }
         });
         return root;
@@ -146,7 +141,7 @@ public class DetailFragment extends Fragment {
             Glide.with(root.getContext()).load(photo.getUrl()).into(contentView);
             collectBtn.setImageDrawable(root.getContext()
                     .getResources()
-                    .getDrawable(getCollectDrawable(isCollected));
+                    .getDrawable(getCollectDrawable(isCollected)));
 
         }
 
