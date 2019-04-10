@@ -1,13 +1,12 @@
 package com.example.hwt.testapp.detail;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.support.v4.view.PagerAdapter;
-import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,26 +25,29 @@ import me.kaelaela.verticalviewpager.transforms.DefaultTransformer;
 /**
  * Created by cb on 2019/4/9.
  */
-public class DetailActivity extends AppCompatActivity {
+public class DetailFragment extends Fragment {
     private static final String IMG_LIST = "imgList";
 
     private List<ImgTmp> imgTmpList;
     private VerticalViewPager viewPager;
 
-    public static Intent newIntent(Context context, ArrayList<ImgTmp> imgTmps) {
-        Intent intent = new Intent(context, DetailActivity.class);
-        intent.putParcelableArrayListExtra(IMG_LIST, imgTmps);
-        return intent;
+    public static Fragment newFragment(Context context, ArrayList<ImgTmp> imgTmps) {
+        Bundle bundle = new Bundle();
+        bundle.putParcelableArrayList(IMG_LIST, imgTmps);
+        DetailFragment fragment = new DetailFragment();
+        fragment.setArguments(bundle);
+        return fragment;
     }
 
+    @Nullable
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_img_detail);
-        imgTmpList = getIntent().getParcelableArrayListExtra(IMG_LIST);
-        viewPager = findViewById(R.id.view_pager);
-        viewPager.setAdapter(new Adapter(this, imgTmpList));
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View root = inflater.inflate(R.layout.fragment_img_detail, container, false);
+        imgTmpList = getArguments().getParcelableArrayList(IMG_LIST);
+        viewPager = root.findViewById(R.id.view_pager);
+        viewPager.setAdapter(new Adapter(getContext(), imgTmpList));
         viewPager.setPageTransformer(false, new DefaultTransformer());
+        return super.onCreateView(inflater, container, savedInstanceState);
     }
 
     private static class Adapter extends PagerAdapter {
@@ -98,6 +100,7 @@ public class DetailActivity extends AppCompatActivity {
         private ImageView contentView;
         private ImageView collectBtn;
         private ImgTmp imgTmp;
+        private boolean isCollected;
 
         public ViewHolder(View view) {
             this.root = view;
@@ -107,7 +110,8 @@ public class DetailActivity extends AppCompatActivity {
         }
 
         public void bind(final ImgTmp img) {
-            this.imgTmp = imgTmp;
+            this.imgTmp = img;
+            isCollected = CollectionHelper.isCollected(img.getImgUrl());
             ImgGetterTmp.loadImg(new ImgGetterTmp.Callback() {
                 @Override
                 public void onLoaded(String url, Drawable drawable) {
@@ -116,24 +120,18 @@ public class DetailActivity extends AppCompatActivity {
                     }
                 }
             });
-            CollectionHelper.loadCollectionInfo(new CollectionHelper.Callback() {
-                @Override
-                public void onLoaded(String url, boolean isCollect) {
-                    if (url.equals(img.getImgUrl())) {
-                        collectBtn.setImageDrawable(root.getContext()
-                                .getResources()
-                                .getDrawable(isCollect ?
-                                        R.drawable.collected :
-                                        R.drawable.no_collect));
-                    }
-                }
-            });
+            collectBtn.setImageDrawable(root.getContext()
+                    .getResources()
+                    .getDrawable(isCollected ?
+                            R.drawable.collected :
+                            R.drawable.no_collect));
+
         }
 
         @Override
         public void onClick(View v) {
             if (imgTmp != null) {
-                CollectionHelper.collect(imgTmp.getImgUrl());
+                CollectionHelper.collect(imgTmp.getImgUrl(), !isCollected);
             }
         }
 
