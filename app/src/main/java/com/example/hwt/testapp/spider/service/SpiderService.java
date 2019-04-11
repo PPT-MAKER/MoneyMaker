@@ -24,14 +24,10 @@ public class SpiderService {
     private static final String BASE_URL = "http://sj.zol.com.cn";
     private static final String ALBUM_URL = BASE_URL + "/bizhi";
 
-    /**
-     * @param onAlbumGet 回调
-     */
-    public static Observable<List<AlbumBean>> getAlbum(@Nullable OnAlbumGet onAlbumGet) {
+    public static Observable<List<AlbumBean>> getAlbum() {
         List<AlbumBean> caches = (List<AlbumBean>) SPUtil.getInstance().getObject(ALBUM_URL, new TypeToken<List<AlbumBean>>() {
         }.getType());
-        if (!ListUtil.isEmpty(caches) && onAlbumGet != null) {
-            onAlbumGet.onAlbumGet(caches);
+        if (!ListUtil.isEmpty(caches)) {
             return Observable.just(caches);
         }
 
@@ -54,10 +50,6 @@ public class SpiderService {
                 }
             }
         }
-        if (onAlbumGet != null) {
-            onAlbumGet.onAlbumGet(ret);
-        }
-
         SPUtil.getInstance().cacheObject(ALBUM_URL, ret);
         return Observable.just(ret);
     }
@@ -125,10 +117,6 @@ public class SpiderService {
             e.printStackTrace();
         }
         return null;
-    }
-
-    public interface OnAlbumGet {
-        void onAlbumGet(List<AlbumBean> data);
     }
 
     public interface OnPhotoGet {
