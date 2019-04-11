@@ -47,7 +47,7 @@ public class AlbumBean implements Serializable {
                 '}';
     }
 
-    public static class AlbumSecondBean {
+    public static class AlbumSecondBean implements Serializable{
         private String name;
         private String coverUrl;
         private String albumHref;

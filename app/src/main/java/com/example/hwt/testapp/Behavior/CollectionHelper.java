@@ -36,4 +36,8 @@ public class CollectionHelper {
         editor.putStringSet(COLLECTION_KEY, collectItems);
         editor.apply();
     }
+
+    public static Set<String> getCollectItems() {
+        return collectItems;
+    }
 }
