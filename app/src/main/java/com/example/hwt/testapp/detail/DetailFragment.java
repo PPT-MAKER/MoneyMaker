@@ -1,25 +1,33 @@
 package com.example.hwt.testapp.detail;
 
+import android.app.WallpaperManager;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.PagerAdapter;
-import android.util.Log;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.drawable.GlideDrawable;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.example.hwt.testapp.Behavior.CollectionHelper;
 import com.example.hwt.testapp.R;
-import com.example.hwt.testapp.spider.beans.AlbumBean;
 import com.example.hwt.testapp.spider.beans.PhotoBean;
 import com.example.hwt.testapp.spider.service.SpiderService;
 
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -35,10 +43,10 @@ import me.kaelaela.verticalviewpager.transforms.DefaultTransformer;
 public class DetailFragment extends Fragment {
     private static final String ALBUM = "album";
 
-    private AlbumBean album;
     private VerticalViewPager viewPager;
+    private Bitmap bitmap;
 
-    public static Fragment newFragment(Context context, String albumUrl) {
+    public static Fragment newFragment(String albumUrl) {
         Bundle bundle = new Bundle();
         bundle.putString(ALBUM, albumUrl);
         DetailFragment fragment = new DetailFragment();
@@ -70,7 +78,18 @@ public class DetailFragment extends Fragment {
         return root;
     }
 
-    private static class Adapter extends PagerAdapter {
+    private void initSkin() {
+        if (bitmap != null) {
+            try {
+                WallpaperManager manager = WallpaperManager.getInstance(getContext());
+                manager.setBitmap(bitmap);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private class Adapter extends PagerAdapter {
         private List<PhotoBean> imgs;
         private Context context;
         private List<ViewHolder> viewHolders;
@@ -100,16 +119,9 @@ public class DetailFragment extends Fragment {
         @NonNull
         @Override
         public Object instantiateItem(@NonNull ViewGroup container, int position) {
-            ViewHolder viewHolder;
-            if (viewHolders.size() == 0) {
-                LayoutInflater inflater = LayoutInflater.from(context);
-                View root = inflater.inflate(R.layout.view_detail_item, container, false);
-                viewHolder = new ViewHolder(root);
-            } else {
-                viewHolder = viewHolders.remove(0);
-            }
-            viewHolder.bind(imgs.get(position));
+            ViewHolder viewHolder = load(container, position);
             container.addView(viewHolder.getContentView());
+            preload(container, position);
             return viewHolder;
         }
 
@@ -119,39 +131,70 @@ public class DetailFragment extends Fragment {
             container.removeView(viewHolder.getContentView());
             viewHolders.add(viewHolder);
         }
+
+        private ViewHolder load(@NonNull ViewGroup container, int position) {
+            ViewHolder viewHolder;
+            if (viewHolders.size() == 0) {
+                LayoutInflater inflater = LayoutInflater.from(context);
+                View root = inflater.inflate(R.layout.view_detail_item, container, false);
+                viewHolder = new ViewHolder(root);
+            } else {
+                viewHolder = viewHolders.remove(0);
+            }
+            viewHolder.bind(imgs.get(position), position);
+            return viewHolder;
+        }
+
+        private void preload(@NonNull ViewGroup container, int position) {
+            if (position > 0) {
+                load(container, position - 1);
+            } else if (position < imgs.size() - 1) {
+                load(container, position + 1);
+            }
+        }
     }
 
-    private static class ViewHolder implements View.OnClickListener {
+    private class ViewHolder extends GestureDetector.SimpleOnGestureListener implements View.OnClickListener, View.OnTouchListener {
         private View root;
         private ImageView contentView;
         private ImageView collectBtn;
         private PhotoBean photo;
         private boolean isCollected;
+        private GestureDetector gestureDetector;
 
         public ViewHolder(View view) {
             this.root = view;
             this.contentView = root.findViewById(R.id.content);
             this.collectBtn = root.findViewById(R.id.collect_btn);
             collectBtn.setOnClickListener(this);
+            gestureDetector = new GestureDetector(this);
+            gestureDetector.setIsLongpressEnabled(false);
+            root.setOnTouchListener(this);
         }
 
-        public void bind(final PhotoBean photo) {
+        public void bind(final PhotoBean photo, final int index) {
+            bitmap = null;
             this.photo = photo;
             isCollected = CollectionHelper.isCollected(photo.getUrl());
-            Glide.with(root.getContext()).load(photo.getUrl()).into(contentView);
-            collectBtn.setImageDrawable(root.getContext()
-                    .getResources()
-                    .getDrawable(getCollectDrawable(isCollected)));
+            Glide.with(root.getContext()).load(photo.getUrl()).listener(new RequestListener<String, GlideDrawable>() {
+                @Override
+                public boolean onException(Exception e, String s, Target<GlideDrawable> target, boolean b) {
+                    return false;
+                }
 
+                @Override
+                public boolean onResourceReady(GlideDrawable glideDrawable, String s, Target<GlideDrawable> target, boolean b, boolean b1) {
+                    if(viewPager.getCurrentItem() == index)
+                    bitmap = drawableToBitmap(glideDrawable);
+                    return false;
+                }
+            }).into(contentView);
+            collectBtn.setImageResource(getCollectDrawable(isCollected));
         }
 
         @Override
         public void onClick(View v) {
-            if (photo.getUrl() != null) {
-                isCollected = !isCollected;
-                CollectionHelper.collect(photo.getUrl(), isCollected);
-                collectBtn.setImageResource(getCollectDrawable(isCollected));
-            }
+            collect();
         }
 
         private int getCollectDrawable(boolean isCollected) {
@@ -162,6 +205,46 @@ public class DetailFragment extends Fragment {
 
         public View getContentView() {
             return root;
+        }
+
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            return gestureDetector.onTouchEvent(event);
+        }
+
+        @Override
+        public boolean onDoubleTap(MotionEvent e) {
+            collect();
+            return true;
+        }
+
+        private void collect() {
+            if (photo.getUrl() != null) {
+                isCollected = !isCollected;
+                CollectionHelper.collect(photo.getUrl(), isCollected);
+                collectBtn.setImageResource(getCollectDrawable(isCollected));
+            }
+        }
+
+        private Bitmap drawableToBitmap (Drawable drawable) {
+            Bitmap bitmap = null;
+            if (drawable instanceof BitmapDrawable) {
+                BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
+                if(bitmapDrawable.getBitmap() != null) {
+                    return bitmapDrawable.getBitmap();
+                }
+            }
+
+            if(drawable.getIntrinsicWidth() <= 0 || drawable.getIntrinsicHeight() <= 0) {
+                bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888); // Single color bitmap will be created of 1x1 pixel
+            } else {
+                bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+            }
+
+            Canvas canvas = new Canvas(bitmap);
+            drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+            drawable.draw(canvas);
+            return bitmap;
         }
     }
 }

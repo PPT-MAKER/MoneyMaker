@@ -32,10 +32,10 @@ public class MainActivity extends AppCompatActivity {
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, MainFragment.newFragment()).commit();
                 break;
             case R.id.history:
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, DetailFragment.newFragment(this, null)).commit();
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, DetailFragment.newFragment(null)).commit();
                 break;
             case R.id.collection:
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, DetailFragment.newFragment(this, null)).commit();
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, DetailFragment.newFragment(null)).commit();
                 break;
         }
         return true;

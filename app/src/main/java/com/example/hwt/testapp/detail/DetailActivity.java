@@ -1,6 +1,5 @@
 package com.example.hwt.testapp.detail;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -24,7 +23,7 @@ public class DetailActivity extends AppCompatActivity {
 
     private void initFragments() {
         getSupportFragmentManager().beginTransaction().add(R.id.fragment_container,
-                DetailFragment.newFragment(this, mAlbumBean.getAlbumDetailHref().get(0))).commit();
+                DetailFragment.newFragment(mAlbumBean.getAlbumDetailHref().get(0))).commit();
     }
 
 
