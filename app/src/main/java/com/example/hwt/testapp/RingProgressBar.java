@@ -79,12 +79,12 @@ public class RingProgressBar extends View {
         paint.setAntiAlias(true);//消除锯齿
         //获取自定义属性和默认值
         max = 100;
-        textColor = context.getResources().getColor(R.color.color_FF63FAF2);//字体颜色
+        textColor = context.getResources().getColor(R.color.black);//字体颜色
         textSize = 110.0f;//字体大小
         circleColor = Color.TRANSPARENT;//中间圆的颜色,默认透明
         ringColor = context.getResources().getColor(R.color.color_FFF2F3F7);//外层初始圆环的颜色，默认透明
         style = STROKE;
-        progressColor = context.getResources().getColor(R.color.color_FF63FAF2);//外层进度环的颜色，默认蓝色
+        progressColor = context.getResources().getColor(R.color.black);//外层进度环的颜色，默认蓝色
         detailTextColor = context.getResources().getColor(R.color.color_FF999999);
         detailTextSize = 30.0f;
     }
@@ -152,5 +152,9 @@ public class RingProgressBar extends View {
             this.progress = progress;
             postInvalidate();
         }
+    }
+
+    public int getProgress() {
+        return progress;
     }
 }

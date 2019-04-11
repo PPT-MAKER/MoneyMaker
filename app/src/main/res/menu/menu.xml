@@ -11,4 +11,13 @@
     <item
         android:id="@+id/collection"
         android:title="我的收藏" />
+    <item
+        android:id="@+id/search"
+        android:title="搜索" />
+    <item
+        android:id="@+id/clean"
+        android:title="清除缓存" />
+    <item
+        android:id="@+id/good"
+        android:title="给个好评" />
 </menu>

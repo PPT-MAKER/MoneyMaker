@@ -2,7 +2,9 @@ package com.example.hwt.testapp.Behavior;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.LruCache;
 
+import com.bumptech.glide.load.engine.bitmap_recycle.LruBitmapPool;
 import com.example.hwt.testapp.GApplication;
 
 import java.util.HashSet;
@@ -12,6 +14,8 @@ public class CollectionHelper {
     private static final String COLLECTION_SP = "collectionSp";
 
     private static Set<String> collectItems = new HashSet<>();
+
+    private static Set<String> historyItems = new HashSet<>();
 
     private static SharedPreferences sp;
 
@@ -39,5 +43,13 @@ public class CollectionHelper {
 
     public static Set<String> getCollectItems() {
         return collectItems;
+    }
+
+    public static void history(String url) {
+        historyItems.add(url);
+    }
+
+    public static Set<String> getHistoryItems() {
+        return historyItems;
     }
 }
