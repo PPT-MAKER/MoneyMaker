@@ -34,4 +34,11 @@
             android:layout_alignParentEnd="true"
             android:src="@drawable/no_collected"/>
     </com.example.hwt.testapp.Behavior.LoveAnimator>
+    <ProgressBar
+        android:id="@+id/progress"
+        android:layout_margin="48dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        style="@style/Base.Widget.AppCompat.ProgressBar"
+        android:visibility="gone"/>
 </android.support.constraint.ConstraintLayout>

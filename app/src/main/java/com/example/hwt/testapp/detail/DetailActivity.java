@@ -7,6 +7,8 @@ import android.support.v7.app.AppCompatActivity;
 import com.example.hwt.testapp.R;
 import com.example.hwt.testapp.spider.beans.AlbumBean;
 
+import java.util.ArrayList;
+
 public class DetailActivity extends AppCompatActivity {
 
     public static final String ALBUM_BEAN = "albumbean";
@@ -22,8 +24,12 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void initFragments() {
+        ArrayList<String> urls = new ArrayList<>();
+        for (AlbumBean.AlbumSecondBean albumSecondBean : mAlbumBean.getSecondBeans()) {
+            urls.add(albumSecondBean.getAlbumHref());
+        }
         getSupportFragmentManager().beginTransaction().add(R.id.fragment_container,
-                DetailFragment.newFragment(mAlbumBean.getSecondBeans().get(0).getAlbumHref())).commit();
+                DetailFragment.newFragment(urls)).commit();
     }
 
 
