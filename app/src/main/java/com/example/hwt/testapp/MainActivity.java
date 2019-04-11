@@ -5,10 +5,12 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.example.hwt.testapp.detail.DetailFragment;
 
 public class MainActivity extends AppCompatActivity {
+    private long lastBackPressTime;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -37,5 +39,16 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
         return true;
+    }
+
+    @Override
+    public void onBackPressed() {
+        long current = System.currentTimeMillis();
+        if (current - lastBackPressTime < 1000) {
+            finish();
+        } else {
+            lastBackPressTime = current;
+            Toast.makeText(this, "再按一次退出登录", Toast.LENGTH_SHORT).show();
+        }
     }
 }
