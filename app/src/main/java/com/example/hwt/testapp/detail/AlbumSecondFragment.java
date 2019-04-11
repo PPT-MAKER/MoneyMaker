@@ -19,30 +19,32 @@ import com.bumptech.glide.Glide;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
 import com.example.hwt.testapp.ListUtil;
-import com.example.hwt.testapp.MainActivity;
 import com.example.hwt.testapp.R;
 import com.example.hwt.testapp.spider.beans.AlbumBean;
-import com.example.hwt.testapp.spider.service.SpiderService;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.functions.Consumer;
-import io.reactivex.schedulers.Schedulers;
 
+import static com.example.hwt.testapp.detail.DetailActivity.LOAD_SECOND_ALBUM;
 
-public class MainFragment extends Fragment {
+public class AlbumSecondFragment extends Fragment {
 
     RecyclerView mListView;
 
     ViewAdapter mViewAdapter;
 
-    List<AlbumBean> mAlbumBeans = new ArrayList<>();
+    List<AlbumBean.AlbumSecondBean> mAlbumBeans = new ArrayList<>();
 
-    MainActivity activity;
-    public static MainFragment newFragment() {
-        return new MainFragment();
+    private static final String DATA_KEY = "AlbumSecondFragmentData";
+
+    public static Fragment newFragment(List<AlbumBean.AlbumSecondBean> data){
+        AlbumSecondFragment fragment = new AlbumSecondFragment();
+        Bundle args = new Bundle();
+        args.putSerializable(DATA_KEY,(Serializable) data);
+        fragment.setArguments(args);
+        return  fragment;
     }
 
     @Nullable
@@ -50,7 +52,6 @@ public class MainFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
         mListView = view.findViewById(R.id.list_view);
-        activity = (MainActivity) getActivity();
         initData();
         return view;
     }
@@ -59,37 +60,29 @@ public class MainFragment extends Fragment {
         mViewAdapter = new ViewAdapter(getContext(), R.layout.item_view, mAlbumBeans);
         mListView.setAdapter(mViewAdapter);
         mListView.setLayoutManager(new GridLayoutManager(getContext(), 2, LinearLayoutManager.VERTICAL, false));
-        SpiderService.getAlbum()
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .doOnNext(new Consumer<List<AlbumBean>>() {
-                    @Override
-                    public void accept(List<AlbumBean> albumBeans) throws Exception {
-                        if (!ListUtil.isEmpty(albumBeans)) {
-                            mAlbumBeans.addAll(albumBeans);
-                        }
-                    }
-                })
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<List<AlbumBean>>() {
-                    @Override
-                    public void accept(List<AlbumBean> albumBeans) throws Exception {
-                        mViewAdapter.notifyDataSetChanged();
-                    }
-                });
+        initDataSource();
     }
 
-     class ViewAdapter extends BaseQuickAdapter<AlbumBean, BaseViewHolder> {
+    private void initDataSource() {
+        List<AlbumBean.AlbumSecondBean> albumSecondBeans = (List<AlbumBean.AlbumSecondBean>) getArguments().getSerializable(DATA_KEY);
+        if(!ListUtil.isEmpty(albumSecondBeans)){
+            mAlbumBeans.clear();
+            mAlbumBeans.addAll(albumSecondBeans);
+            mViewAdapter.notifyDataSetChanged();
+        }
+    }
+
+    static class ViewAdapter extends BaseQuickAdapter<AlbumBean.AlbumSecondBean, BaseViewHolder> {
 
         private Context mContext;
 
-        public ViewAdapter(Context context, int layoutResId, @Nullable List<AlbumBean> data) {
+        public ViewAdapter(Context context, int layoutResId, @Nullable List<AlbumBean.AlbumSecondBean> data) {
             super(layoutResId, data);
             mContext = context;
         }
 
         @Override
-        protected void convert(BaseViewHolder helper, final AlbumBean item) {
+        protected void convert(BaseViewHolder helper, final AlbumBean.AlbumSecondBean item) {
             Glide.with(mContext)
                     .load(item.getCoverUrl())
                     .asBitmap()
@@ -98,7 +91,9 @@ public class MainFragment extends Fragment {
             helper.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    MainFragment.this.getFragmentManager().beginTransaction().add(R.id.fragment_container,AlbumSecondFragment.newFragment(item.getSecondBeans())).commit();
+                    Intent intent = new Intent(mContext, DetailActivity.class);
+                    intent.putExtra(LOAD_SECOND_ALBUM, item);
+                    mContext.startActivity(intent);
                 }
             });
         }
@@ -107,4 +102,5 @@ public class MainFragment extends Fragment {
 //            void jump(AlbumBean item);
 //        }
     }
+
 }

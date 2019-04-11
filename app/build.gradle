@@ -68,5 +68,5 @@ dependencies {
     implementation 'org.jsoup:jsoup:1.11.3'
     implementation 'me.kaelaela:verticalviewpager:1.0.0@aar'
 
-    compile 'com.github.CymChad:BaseRecyclerViewAdapterHelper:2.9.28'
+    implementation 'com.github.CymChad:BaseRecyclerViewAdapterHelper:2.9.28'
 }

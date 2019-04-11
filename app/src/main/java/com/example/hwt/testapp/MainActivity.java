@@ -9,8 +9,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.example.hwt.testapp.Behavior.CollectionHelper;
 import com.example.hwt.testapp.detail.DetailFragment;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Random;
 
 import io.reactivex.schedulers.Schedulers;
@@ -18,8 +21,6 @@ import io.reactivex.schedulers.Schedulers;
 public class MainActivity extends AppCompatActivity {
 
     private RingProgressBar mRingProgressBar;
-
-    private long lastBackPressTime;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -42,10 +43,10 @@ public class MainActivity extends AppCompatActivity {
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, com.example.hwt.testapp.detail.MainFragment.newFragment()).commit();
                 break;
             case R.id.history:
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, DetailFragment.newFragment(DetailFragment.Type.HISTORY)).commit();
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,DetailFragment.newFragment(new ArrayList<>(CollectionHelper.getHistoryItems()))).commit();
                 break;
             case R.id.collection:
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, DetailFragment.newFragment(DetailFragment.Type.COLLECT)).commit();
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, DetailFragment.newFragment(new ArrayList<>(CollectionHelper.getCollectItems()))).commit();
                 break;
             case R.id.clean:
                 mRingProgressBar.setProgress(0);
@@ -76,14 +77,5 @@ public class MainActivity extends AppCompatActivity {
 
     Handler mHandler = new Handler();
 
-    @Override
-    public void onBackPressed() {
-        long current = System.currentTimeMillis();
-        if (current - lastBackPressTime < 1000) {
-            finish();
-        } else {
-            lastBackPressTime = current;
-            Toast.makeText(this, "再按一次退出", Toast.LENGTH_SHORT).show();
-        }
-    }
+
 }

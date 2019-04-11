@@ -43,7 +43,7 @@ import me.kaelaela.verticalviewpager.transforms.DefaultTransformer;
  * Created by cb on 2019/4/9.
  */
 public class DetailFragment extends Fragment {
-    private static final String ALBUM = "album";
+    private static final String PHOTOS = "photots";
 
     private static final String COLLECT = "collect";
 
@@ -53,24 +53,11 @@ public class DetailFragment extends Fragment {
 
     private List<String> urls = new ArrayList<>();
 
-    public enum Type {
-        COLLECT, HISTORY
-    }
     private Bitmap bitmap;
 
     public static Fragment newFragment(ArrayList<String> albumUrl) {
         Bundle bundle = new Bundle();
-        bundle.putStringArrayList(ALBUM, albumUrl);
-        DetailFragment fragment = new DetailFragment();
-        fragment.setArguments(bundle);
-        return fragment;
-    }
-
-    public static Fragment newFragment(Type type) {
-        Bundle bundle = new Bundle();
-        if (type == Type.COLLECT) {
-            bundle.putBoolean(COLLECT, true);
-        }
+        bundle.putStringArrayList(PHOTOS, albumUrl);
         DetailFragment fragment = new DetailFragment();
         fragment.setArguments(bundle);
         return fragment;
@@ -84,22 +71,13 @@ public class DetailFragment extends Fragment {
         viewPager = root.findViewById(R.id.view_pager);
         viewPager.setPageTransformer(false, new DefaultTransformer());
         adapter = new Adapter(getContext(), urls);
-        List<String> urls = getArguments().getStringArrayList(ALBUM);
-        if (urls != null) {
-            for (String s : urls) {
-                load(s);
-            }
-        }else {
-            boolean isCollect = getArguments().getBoolean(COLLECT, false);
-            if (isCollect) {
-                urls.addAll(CollectionHelper.getCollectItems());
-                adapter.notifyDataSetChanged();
-            } else {
-                urls.addAll(CollectionHelper.getHistoryItems());
-                adapter.notifyDataSetChanged();
-            }
-        }
         viewPager.setAdapter(adapter);
+
+        List<String> photos = getArguments().getStringArrayList(PHOTOS);
+        if (photos != null) {
+            urls.addAll(photos);
+            adapter.notifyDataSetChanged();
+        }
         return root;
     }
 
@@ -108,27 +86,6 @@ public class DetailFragment extends Fragment {
             progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
         }
     }
-
-    private void load(String url) {
-        SpiderService.getPhoto(url)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<List<PhotoBean>>() {
-                    @Override
-                    public void accept(List<PhotoBean> photoBeans) throws Exception {
-                        for (PhotoBean bean : photoBeans) {
-                            urls.add(bean.getUrl());
-                        }
-                        adapter.notifyDataSetChanged();
-                    }
-                }, new Consumer<Throwable>() {
-                    @Override
-                    public void accept(Throwable throwable) throws Exception {
-
-                    }
-                });
-    }
-
 
     private void initSkin() {
         if (bitmap != null) {
