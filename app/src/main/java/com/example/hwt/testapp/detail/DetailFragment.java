@@ -94,6 +94,9 @@ public class DetailFragment extends Fragment {
             if (isCollect) {
                 urls.addAll(CollectionHelper.getCollectItems());
                 adapter.notifyDataSetChanged();
+            } else {
+                urls.addAll(CollectionHelper.getHistoryItems());
+                adapter.notifyDataSetChanged();
             }
         }
         viewPager.setAdapter(adapter);
