@@ -1,5 +1,7 @@
 package com.example.hwt.testapp.spider.service;
 
+import android.support.annotation.Nullable;
+
 import com.example.hwt.testapp.ListUtil;
 import com.example.hwt.testapp.SPUtil;
 import com.example.hwt.testapp.spider.beans.AlbumBean;
@@ -130,14 +132,6 @@ public class SpiderService {
             e.printStackTrace();
         }
         return null;
-    }
-
-    public interface OnAlbumGet {
-        void onAlbumGet(List<AlbumBean> data);
-    }
-
-    public interface OnPhotoGet {
-        void onPhotoGet(List<PhotoBean> data);
     }
 
 }
