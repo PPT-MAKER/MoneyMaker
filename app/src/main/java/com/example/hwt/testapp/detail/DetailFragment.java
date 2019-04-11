@@ -6,6 +6,10 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -23,11 +27,13 @@ import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 import com.example.hwt.testapp.Behavior.CollectionHelper;
+import com.example.hwt.testapp.Behavior.LoveAnimator;
 import com.example.hwt.testapp.R;
 import com.example.hwt.testapp.spider.beans.PhotoBean;
 import com.example.hwt.testapp.spider.service.SpiderService;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -43,7 +49,17 @@ import me.kaelaela.verticalviewpager.transforms.DefaultTransformer;
 public class DetailFragment extends Fragment {
     private static final String ALBUM = "album";
 
+    private static final String COLLECT = "collect";
+
+    private AlbumBean album;
     private VerticalViewPager viewPager;
+    private Adapter adapter;
+
+    private List<String> urls = new ArrayList<>();
+
+    public enum Type {
+        COLLECT, HISTORY
+    }
     private Bitmap bitmap;
 
     public static Fragment newFragment(String albumUrl) {
@@ -54,27 +70,51 @@ public class DetailFragment extends Fragment {
         return fragment;
     }
 
+    public static Fragment newFragment(Type type) {
+        Bundle bundle = new Bundle();
+        if (type == Type.COLLECT) {
+            bundle.putBoolean(COLLECT, true);
+        }
+        DetailFragment fragment = new DetailFragment();
+        fragment.setArguments(bundle);
+        return fragment;
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_img_detail, container, false);
-        String url = getArguments().getString(ALBUM);
         viewPager = root.findViewById(R.id.view_pager);
         viewPager.setPageTransformer(false, new DefaultTransformer());
-        SpiderService.getPhoto(url)
-        .subscribeOn(Schedulers.io())
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribe(new Consumer<List<PhotoBean>>() {
-            @Override
-            public void accept(List<PhotoBean> photoBeans) throws Exception {
-                viewPager.setAdapter(new Adapter(getContext(), photoBeans));
-            }
-        }, new Consumer<Throwable>() {
-            @Override
-            public void accept(Throwable throwable) throws Exception {
+        adapter = new Adapter(getContext(), urls);
+        String url = getArguments().getString(ALBUM);
+        if (url != null) {
+            SpiderService.getPhoto(url)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Consumer<List<PhotoBean>>() {
+                        @Override
+                        public void accept(List<PhotoBean> photoBeans) throws Exception {
+                            for (PhotoBean bean : photoBeans) {
+                                urls.add(bean.getUrl());
+                            }
+                            adapter.notifyDataSetChanged();
 
+                        }
+                    }, new Consumer<Throwable>() {
+                        @Override
+                        public void accept(Throwable throwable) throws Exception {
+
+                        }
+                    });
+        }else {
+            boolean isCollect = getArguments().getBoolean(COLLECT, false);
+            if (isCollect) {
+                urls.addAll(CollectionHelper.getCollectItems());
+                adapter.notifyDataSetChanged();
             }
-        });
+        }
+        viewPager.setAdapter(adapter);
         return root;
     }
 
@@ -90,11 +130,11 @@ public class DetailFragment extends Fragment {
     }
 
     private class Adapter extends PagerAdapter {
-        private List<PhotoBean> imgs;
+        private List<String> imgs;
         private Context context;
         private List<ViewHolder> viewHolders;
 
-        public Adapter(Context context, @NonNull List<PhotoBean> imgs) {
+        public Adapter(Context context, @NonNull List<String> imgs) {
             this.context = context;
             this.imgs = imgs;
             this.viewHolders = new LinkedList<>();
@@ -154,47 +194,49 @@ public class DetailFragment extends Fragment {
         }
     }
 
-    private class ViewHolder extends GestureDetector.SimpleOnGestureListener implements View.OnClickListener, View.OnTouchListener {
+    private class ViewHolder implements View.OnClickListener {
         private View root;
         private ImageView contentView;
         private ImageView collectBtn;
-        private PhotoBean photo;
+        private LoveAnimator mLoveAnimator;
+        private String url;
         private boolean isCollected;
-        private GestureDetector gestureDetector;
 
         public ViewHolder(View view) {
             this.root = view;
             this.contentView = root.findViewById(R.id.content);
             this.collectBtn = root.findViewById(R.id.collect_btn);
+            this.mLoveAnimator = root.findViewById(R.id.loveanimator);
+            this.mLoveAnimator.setCollectAHelper(new LoveAnimator.CollectAHelper() {
+                @Override
+                public void collect() {
+                    if (url != null) {
+                        isCollected = true;
+                        CollectionHelper.collect(url, isCollected);
+                        collectBtn.setImageResource(getCollectDrawable(isCollected));
+                    }
+                }
+            });
             collectBtn.setOnClickListener(this);
-            gestureDetector = new GestureDetector(this);
-            gestureDetector.setIsLongpressEnabled(false);
-            root.setOnTouchListener(this);
         }
 
-        public void bind(final PhotoBean photo, final int index) {
-            bitmap = null;
-            this.photo = photo;
-            isCollected = CollectionHelper.isCollected(photo.getUrl());
-            Glide.with(root.getContext()).load(photo.getUrl()).listener(new RequestListener<String, GlideDrawable>() {
-                @Override
-                public boolean onException(Exception e, String s, Target<GlideDrawable> target, boolean b) {
-                    return false;
-                }
+        public void bind(final String url) {
+            this.url = url;
+            isCollected = CollectionHelper.isCollected(url);
+            Glide.with(root.getContext()).load(url).into(contentView);
+            collectBtn.setImageDrawable(root.getContext()
+                    .getResources()
+                    .getDrawable(getCollectDrawable(isCollected)));
 
-                @Override
-                public boolean onResourceReady(GlideDrawable glideDrawable, String s, Target<GlideDrawable> target, boolean b, boolean b1) {
-                    if(viewPager.getCurrentItem() == index)
-                    bitmap = drawableToBitmap(glideDrawable);
-                    return false;
-                }
-            }).into(contentView);
-            collectBtn.setImageResource(getCollectDrawable(isCollected));
         }
 
         @Override
         public void onClick(View v) {
-            collect();
+            if (url != null) {
+                isCollected = !isCollected;
+                CollectionHelper.collect(url, isCollected);
+                collectBtn.setImageResource(getCollectDrawable(isCollected));
+            }
         }
 
         private int getCollectDrawable(boolean isCollected) {
@@ -206,26 +248,6 @@ public class DetailFragment extends Fragment {
         public View getContentView() {
             return root;
         }
-
-        @Override
-        public boolean onTouch(View v, MotionEvent event) {
-            return gestureDetector.onTouchEvent(event);
-        }
-
-        @Override
-        public boolean onDoubleTap(MotionEvent e) {
-            collect();
-            return true;
-        }
-
-        private void collect() {
-            if (photo.getUrl() != null) {
-                isCollected = !isCollected;
-                CollectionHelper.collect(photo.getUrl(), isCollected);
-                collectBtn.setImageResource(getCollectDrawable(isCollected));
-            }
-        }
-
         private Bitmap drawableToBitmap (Drawable drawable) {
             Bitmap bitmap = null;
             if (drawable instanceof BitmapDrawable) {

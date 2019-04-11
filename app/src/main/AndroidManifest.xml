@@ -15,7 +15,8 @@
             android:name=".MainActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"></activity>
         <activity android:name=".detail.DetailActivity"
-            android:theme="@style/Theme.AppCompat.NoActionBar"/>
+            android:theme="@style/NoActionBar"
+            ></activity>
     </application>
 
 </manifest>
