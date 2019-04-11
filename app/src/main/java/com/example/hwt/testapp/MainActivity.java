@@ -7,9 +7,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.example.hwt.testapp.detail.DetailFragment;
-import com.example.hwt.testapp.detail.ImgTmp;
-
-import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,11 +28,12 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.home:
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, MainFragment.newFragment()).commit();
+                break;
             case R.id.history:
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, DetailFragment.newFragment(this, new ArrayList<ImgTmp>())).commit();
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, DetailFragment.newFragment(this, null)).commit();
                 break;
             case R.id.collection:
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, DetailFragment.newFragment(this, new ArrayList<ImgTmp>())).commit();
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, DetailFragment.newFragment(this, null)).commit();
                 break;
         }
         return true;

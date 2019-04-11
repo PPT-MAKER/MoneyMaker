@@ -1,24 +1,31 @@
 package com.example.hwt.testapp.detail;
 
 import android.content.Context;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.PagerAdapter;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import com.bumptech.glide.Glide;
 import com.example.hwt.testapp.Behavior.CollectionHelper;
 import com.example.hwt.testapp.R;
+import com.example.hwt.testapp.spider.beans.AlbumBean;
+import com.example.hwt.testapp.spider.beans.PhotoBean;
+import com.example.hwt.testapp.spider.service.SpiderService;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 import me.kaelaela.verticalviewpager.VerticalViewPager;
 import me.kaelaela.verticalviewpager.transforms.DefaultTransformer;
 
@@ -26,14 +33,14 @@ import me.kaelaela.verticalviewpager.transforms.DefaultTransformer;
  * Created by cb on 2019/4/9.
  */
 public class DetailFragment extends Fragment {
-    private static final String IMG_LIST = "imgList";
+    private static final String ALBUM = "album";
 
-    private List<ImgTmp> imgTmpList;
+    private AlbumBean album;
     private VerticalViewPager viewPager;
 
-    public static Fragment newFragment(Context context, ArrayList<ImgTmp> imgTmps) {
+    public static Fragment newFragment(Context context, String albumUrl) {
         Bundle bundle = new Bundle();
-        bundle.putParcelableArrayList(IMG_LIST, imgTmps);
+        bundle.putString(ALBUM, albumUrl);
         DetailFragment fragment = new DetailFragment();
         fragment.setArguments(bundle);
         return fragment;
@@ -43,27 +50,45 @@ public class DetailFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_img_detail, container, false);
-        imgTmpList = getArguments().getParcelableArrayList(IMG_LIST);
+        String url = getArguments().getParcelable(ALBUM);
         viewPager = root.findViewById(R.id.view_pager);
-        viewPager.setAdapter(new Adapter(getContext(), imgTmpList));
         viewPager.setPageTransformer(false, new DefaultTransformer());
-        return super.onCreateView(inflater, container, savedInstanceState);
+        SpiderService.getPhoto(url, null)
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(new Consumer<List<PhotoBean>>() {
+            @Override
+            public void accept(List<PhotoBean> photoBeans) throws Exception {
+                viewPager.setAdapter(new Adapter(getContext(), photoBeans));
+            }
+        }, new Consumer<Throwable>() {
+            @Override
+            public void accept(Throwable throwable) throws Exception {
+
+            }
+        });
+        return root;
     }
 
     private static class Adapter extends PagerAdapter {
-        private List<ImgTmp> imgTmps;
+        private List<PhotoBean> imgs;
         private Context context;
         private List<ViewHolder> viewHolders;
 
-        public Adapter(Context context, @NonNull List<ImgTmp> imgTmps) {
+        public Adapter(Context context, @NonNull List<PhotoBean> imgs) {
             this.context = context;
-            this.imgTmps = imgTmps;
+            this.imgs = imgs;
             this.viewHolders = new LinkedList<>();
         }
 
         @Override
+        public int getItemPosition(@NonNull Object object) {
+            return PagerAdapter.POSITION_NONE;
+        }
+
+        @Override
         public int getCount() {
-            return imgTmps.size();
+            return imgs.size();
         }
 
         @Override
@@ -83,7 +108,8 @@ public class DetailFragment extends Fragment {
             } else {
                 viewHolder = viewHolders.remove(0);
             }
-            viewHolder.bind(imgTmps.get(position));
+            viewHolder.bind(imgs.get(position));
+            container.addView(viewHolder.getContentView());
             return viewHolder;
         }
 
@@ -99,7 +125,7 @@ public class DetailFragment extends Fragment {
         private View root;
         private ImageView contentView;
         private ImageView collectBtn;
-        private ImgTmp imgTmp;
+        private PhotoBean photo;
         private boolean isCollected;
 
         public ViewHolder(View view) {
@@ -109,30 +135,29 @@ public class DetailFragment extends Fragment {
             collectBtn.setOnClickListener(this);
         }
 
-        public void bind(final ImgTmp img) {
-            this.imgTmp = img;
-            isCollected = CollectionHelper.isCollected(img.getImgUrl());
-            ImgGetterTmp.loadImg(new ImgGetterTmp.Callback() {
-                @Override
-                public void onLoaded(String url, Drawable drawable) {
-                    if (url.equals(img.getImgUrl())) {
-                        contentView.setImageDrawable(drawable);
-                    }
-                }
-            });
+        public void bind(final PhotoBean photo) {
+            this.photo = photo;
+            isCollected = CollectionHelper.isCollected(photo.getUrl());
+            Glide.with(root.getContext()).load(photo.getUrl()).into(contentView);
             collectBtn.setImageDrawable(root.getContext()
                     .getResources()
-                    .getDrawable(isCollected ?
-                            R.drawable.collected :
-                            R.drawable.no_collect));
+                    .getDrawable(getCollectDrawable(isCollected)));
 
         }
 
         @Override
         public void onClick(View v) {
-            if (imgTmp != null) {
-                CollectionHelper.collect(imgTmp.getImgUrl(), !isCollected);
+            if (photo.getUrl() != null) {
+                isCollected = !isCollected;
+                CollectionHelper.collect(photo.getUrl(), isCollected);
+                collectBtn.setImageResource(getCollectDrawable(isCollected));
             }
+        }
+
+        private int getCollectDrawable(boolean isCollected) {
+            return isCollected ?
+                    R.drawable.collected :
+                    R.drawable.no_collected;
         }
 
         public View getContentView() {

@@ -73,12 +73,12 @@ public class SpiderService {
      * @param href       子相册的url AlbumBean.albumDetailHref
      * @param onPhotoGet 回调
      */
-    public static void getPhoto(String href, OnPhotoGet onPhotoGet) {
+    public static Observable<List<PhotoBean>> getPhoto(String href, OnPhotoGet onPhotoGet) {
         List<PhotoBean> caches = (List<PhotoBean>) SPUtil.getInstance().getObject(href, new TypeToken<List<PhotoBean>>() {
         }.getType());
         if (!ListUtil.isEmpty(caches) && onPhotoGet != null) {
             onPhotoGet.onPhotoGet(caches);
-            return;
+            return Observable.just(caches);
         }
 
         List<PhotoBean> ret = new ArrayList<>();
@@ -102,6 +102,7 @@ public class SpiderService {
             onPhotoGet.onPhotoGet(ret);
         }
         SPUtil.getInstance().cacheObject(href, ret);
+        return Observable.just(ret);
     }
 
     private static Document request(String url) {
