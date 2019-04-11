@@ -80,8 +80,8 @@ public class DetailFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_img_detail, container, false);
-        viewPager = root.findViewById(R.id.view_pager);
         progressBar = root.findViewById(R.id.progress);
+        viewPager = root.findViewById(R.id.view_pager);
         viewPager.setPageTransformer(false, new DefaultTransformer());
         adapter = new Adapter(getContext(), urls);
         List<String> urls = getArguments().getStringArrayList(ALBUM);
@@ -104,7 +104,9 @@ public class DetailFragment extends Fragment {
     }
 
     private void showProgress(boolean show) {
-        progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+        if (null != progressBar) {
+            progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+        }
     }
 
     private void load(String url) {
