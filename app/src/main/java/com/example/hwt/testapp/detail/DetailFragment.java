@@ -15,6 +15,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.drawable.GlideDrawable;
@@ -47,6 +49,7 @@ public class DetailFragment extends Fragment {
 
     private VerticalViewPager viewPager;
     private Adapter adapter;
+    private ProgressBar progressBar;
 
     private List<String> urls = new ArrayList<>();
 
@@ -55,9 +58,9 @@ public class DetailFragment extends Fragment {
     }
     private Bitmap bitmap;
 
-    public static Fragment newFragment(String albumUrl) {
+    public static Fragment newFragment(ArrayList<String> albumUrl) {
         Bundle bundle = new Bundle();
-        bundle.putString(ALBUM, albumUrl);
+        bundle.putStringArrayList(ALBUM, albumUrl);
         DetailFragment fragment = new DetailFragment();
         fragment.setArguments(bundle);
         return fragment;
@@ -78,28 +81,14 @@ public class DetailFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_img_detail, container, false);
         viewPager = root.findViewById(R.id.view_pager);
+        progressBar = root.findViewById(R.id.progress);
         viewPager.setPageTransformer(false, new DefaultTransformer());
         adapter = new Adapter(getContext(), urls);
-        String url = getArguments().getString(ALBUM);
-        if (url != null) {
-            SpiderService.getPhoto(url)
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new Consumer<List<PhotoBean>>() {
-                        @Override
-                        public void accept(List<PhotoBean> photoBeans) throws Exception {
-                            for (PhotoBean bean : photoBeans) {
-                                urls.add(bean.getUrl());
-                            }
-                            adapter.notifyDataSetChanged();
-
-                        }
-                    }, new Consumer<Throwable>() {
-                        @Override
-                        public void accept(Throwable throwable) throws Exception {
-
-                        }
-                    });
+        List<String> urls = getArguments().getStringArrayList(ALBUM);
+        if (urls != null) {
+            for (String s : urls) {
+                load(s);
+            }
         }else {
             boolean isCollect = getArguments().getBoolean(COLLECT, false);
             if (isCollect) {
@@ -110,6 +99,31 @@ public class DetailFragment extends Fragment {
         viewPager.setAdapter(adapter);
         return root;
     }
+
+    private void showProgress(boolean show) {
+        progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+    }
+
+    private void load(String url) {
+        SpiderService.getPhoto(url)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<List<PhotoBean>>() {
+                    @Override
+                    public void accept(List<PhotoBean> photoBeans) throws Exception {
+                        for (PhotoBean bean : photoBeans) {
+                            urls.add(bean.getUrl());
+                        }
+                        adapter.notifyDataSetChanged();
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(Throwable throwable) throws Exception {
+
+                    }
+                });
+    }
+
 
     private void initSkin() {
         if (bitmap != null) {
@@ -214,11 +228,18 @@ public class DetailFragment extends Fragment {
         }
 
         public void bind(final String url, final int position) {
+            if (viewPager.getCurrentItem() == position) {
+                showProgress(true);
+            }
             this.url = url;
             isCollected = CollectionHelper.isCollected(url);
             Glide.with(root.getContext()).load(url).listener(new RequestListener<String, GlideDrawable>() {
                 @Override
                 public boolean onException(Exception e, String s, Target<GlideDrawable> target, boolean b) {
+                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                    if (viewPager.getCurrentItem() == position) {
+                        showProgress(false);
+                    }
                     return false;
                 }
 
@@ -226,6 +247,7 @@ public class DetailFragment extends Fragment {
                 public boolean onResourceReady(GlideDrawable glideDrawable, String s, Target<GlideDrawable> target, boolean b, boolean b1) {
                     if (viewPager.getCurrentItem() == position) {
                         bitmap = drawableToBitmap(glideDrawable);
+                        showProgress(false);
                     }
                     return false;
                 }
