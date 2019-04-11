@@ -6,18 +6,12 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.PagerAdapter;
-import android.view.GestureDetector;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -51,7 +45,6 @@ public class DetailFragment extends Fragment {
 
     private static final String COLLECT = "collect";
 
-    private AlbumBean album;
     private VerticalViewPager viewPager;
     private Adapter adapter;
 
@@ -220,10 +213,23 @@ public class DetailFragment extends Fragment {
             collectBtn.setOnClickListener(this);
         }
 
-        public void bind(final String url) {
+        public void bind(final String url, final int position) {
             this.url = url;
             isCollected = CollectionHelper.isCollected(url);
-            Glide.with(root.getContext()).load(url).into(contentView);
+            Glide.with(root.getContext()).load(url).listener(new RequestListener<String, GlideDrawable>() {
+                @Override
+                public boolean onException(Exception e, String s, Target<GlideDrawable> target, boolean b) {
+                    return false;
+                }
+
+                @Override
+                public boolean onResourceReady(GlideDrawable glideDrawable, String s, Target<GlideDrawable> target, boolean b, boolean b1) {
+                    if (viewPager.getCurrentItem() == position) {
+                        bitmap = drawableToBitmap(glideDrawable);
+                    }
+                    return false;
+                }
+            }).into(contentView);
             collectBtn.setImageDrawable(root.getContext()
                     .getResources()
                     .getDrawable(getCollectDrawable(isCollected)));
@@ -248,6 +254,7 @@ public class DetailFragment extends Fragment {
         public View getContentView() {
             return root;
         }
+
         private Bitmap drawableToBitmap (Drawable drawable) {
             Bitmap bitmap = null;
             if (drawable instanceof BitmapDrawable) {
