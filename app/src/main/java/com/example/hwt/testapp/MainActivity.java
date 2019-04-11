@@ -64,8 +64,11 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }, 500L);
                 break;
+            case R.id.search:
+                Toast.makeText(MainActivity.this, "下个版本更新图片搜索功能，敬请期待", Toast.LENGTH_SHORT).show();
+                break;
             case R.id.good:
-                Toast.makeText(MainActivity.this, "敬请期待", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "暂未上架，感谢您的支持🙏", Toast.LENGTH_SHORT).show();
                 break;
         }
         return true;
