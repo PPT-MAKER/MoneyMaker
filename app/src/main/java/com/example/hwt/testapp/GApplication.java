@@ -11,7 +11,7 @@ public class GApplication extends Application {
         super.onCreate();
         sContext = this;
 
-        SPUtil.getInstance().init(sContext);
+        CacheUtil.getInstance().init(sContext);
     }
 
     public static Context getContext() {

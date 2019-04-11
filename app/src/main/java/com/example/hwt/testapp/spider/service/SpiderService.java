@@ -1,7 +1,9 @@
 package com.example.hwt.testapp.spider.service;
 
+import android.text.TextUtils;
+
 import com.example.hwt.testapp.ListUtil;
-import com.example.hwt.testapp.SPUtil;
+import com.example.hwt.testapp.CacheUtil;
 import com.example.hwt.testapp.spider.beans.AlbumBean;
 import com.example.hwt.testapp.spider.beans.PhotoBean;
 import com.google.gson.reflect.TypeToken;
@@ -28,7 +30,7 @@ public class SpiderService {
         return Observable.create(new ObservableOnSubscribe<List<AlbumBean>>() {
             @Override
             public void subscribe(ObservableEmitter<List<AlbumBean>> e) throws Exception {
-                List<AlbumBean> caches = (List<AlbumBean>) SPUtil.getInstance().getObject(ALBUM_URL, new TypeToken<List<AlbumBean>>() {
+                List<AlbumBean> caches = (List<AlbumBean>) CacheUtil.getInstance().getObject(ALBUM_URL, new TypeToken<List<AlbumBean>>() {
                 }.getType());
                 if (!ListUtil.isEmpty(caches)) {
                     e.onNext(caches);
@@ -49,26 +51,40 @@ public class SpiderService {
                             Document albumDetail = request(BASE_URL + next.attr("href"));
                             if (albumDetail != null) {
                                 albumBean.setCoverUrl(getCover(albumDetail));
-                                albumBean.setAlbumDetailHref(getAlbumDetailHref(albumDetail));
+                                albumBean.setSecondBeans(getAlbumSecondBeans(albumDetail));
                             }
                             ret.add(albumBean);
                         }
                     }
                 }
 
-                SPUtil.getInstance().cacheObject(ALBUM_URL, ret);
+                CacheUtil.getInstance().cacheObject(ALBUM_URL, ret);
                 e.onNext(ret);
                 e.onComplete();
             }
         });
     }
 
-    private static List<String> getAlbumDetailHref(Document albumDetail) {
-        List<String> ret = new ArrayList<>();
-        List<String> href = albumDetail.select("body > div.wrapper.top-main.clearfix > div.main > ul a").eachAttr("href");
-        if (href != null) {
-            for (String s : href) {
-                ret.add(BASE_URL + s);
+    private static List<AlbumBean.AlbumSecondBean> getAlbumSecondBeans(Document albumDetail) {
+        List<AlbumBean.AlbumSecondBean> ret = new ArrayList<>();
+        Elements select = albumDetail.select("body > div.wrapper.top-main.clearfix > div.main > ul:nth-child(3) > li");
+        if (select == null) {
+            return ret;
+        }
+
+        Iterator<Element> iterator = select.iterator();
+        while (iterator.hasNext()) {
+            Element next = iterator.next();
+            String href = next.select("a").attr("href");
+            String cover = next.select("a > img").attr("src");
+            String name = next.select("a > span > em").text();
+
+            if (!TextUtils.isEmpty(href)) {
+                AlbumBean.AlbumSecondBean bean = new AlbumBean.AlbumSecondBean();
+                bean.setAlbumHref(BASE_URL + href);
+                bean.setCoverUrl(cover);
+                bean.setName(name);
+                ret.add(bean);
             }
         }
         return ret;
@@ -79,13 +95,13 @@ public class SpiderService {
     }
 
     /**
-     * @param href       子相册的url AlbumBean.albumDetailHref
+     * @param href 子相册的url AlbumBean.albumDetailHref
      */
     public static Observable<List<PhotoBean>> getPhoto(final String href) {
         return Observable.create(new ObservableOnSubscribe<List<PhotoBean>>() {
             @Override
             public void subscribe(ObservableEmitter<List<PhotoBean>> e) throws Exception {
-                List<PhotoBean> caches = (List<PhotoBean>) SPUtil.getInstance().getObject(href, new TypeToken<List<PhotoBean>>() {
+                List<PhotoBean> caches = (List<PhotoBean>) CacheUtil.getInstance().getObject(href, new TypeToken<List<PhotoBean>>() {
                 }.getType());
                 if (!ListUtil.isEmpty(caches)) {
                     e.onNext(caches);
@@ -110,7 +126,7 @@ public class SpiderService {
                     }
                 }
 
-                SPUtil.getInstance().cacheObject(href, ret);
+                CacheUtil.getInstance().cacheObject(href, ret);
                 e.onNext(ret);
                 e.onComplete();
             }
