@@ -1,6 +1,7 @@
 package com.example.hwt.testapp.detail;
 
 import android.content.Context;
+import android.content.Intent;
 import android.media.Image;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -30,6 +31,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
+import static com.example.hwt.testapp.detail.DetailActivity.ALBUM_BEAN;
+
 public class MainFragment extends Fragment {
 
     RecyclerView mListView;
@@ -53,12 +56,6 @@ public class MainFragment extends Fragment {
 
     private void initData() {
         mViewAdapter = new ViewAdapter(getContext(), R.layout.item_view, mAlbumBeans);
-        mViewAdapter.setOnItemClickListener(new BaseQuickAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
-                // todo
-            }
-        });
         mListView.setAdapter(mViewAdapter);
         mListView.setLayoutManager(new GridLayoutManager(getContext(), 2, LinearLayoutManager.VERTICAL, false));
         Schedulers.io().scheduleDirect(new Runnable() {
@@ -95,11 +92,23 @@ public class MainFragment extends Fragment {
         }
 
         @Override
-        protected void convert(BaseViewHolder helper, AlbumBean item) {
+        protected void convert(BaseViewHolder helper, final AlbumBean item) {
             Glide.with(mContext)
                     .load(item.getCoverUrl())
                     .asBitmap()
                     .into((ImageView) helper.itemView.findViewById(R.id.coverImg));
+            helper.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(mContext, DetailActivity.class);
+                    intent.putExtra(ALBUM_BEAN, item);
+                    mContext.startActivity(intent);
+                }
+            });
         }
+
+//        interface  ViewJumpHelper {
+//            void jump(AlbumBean item);
+//        }
     }
 }

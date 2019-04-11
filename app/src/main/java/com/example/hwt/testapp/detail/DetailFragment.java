@@ -50,10 +50,10 @@ public class DetailFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_img_detail, container, false);
-        String url = getArguments().getParcelable(ALBUM);
+        String url = getArguments().getString(ALBUM);
         viewPager = root.findViewById(R.id.view_pager);
         viewPager.setPageTransformer(false, new DefaultTransformer());
-        SpiderService.getPhoto(url, null)
+        SpiderService.getPhoto(url)
         .subscribeOn(Schedulers.io())
         .observeOn(AndroidSchedulers.mainThread())
         .subscribe(new Consumer<List<PhotoBean>>() {

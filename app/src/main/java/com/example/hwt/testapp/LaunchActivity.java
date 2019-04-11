@@ -11,6 +11,7 @@ public class LaunchActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_launch);
         gotoMainPage();
+        finish();
     }
 
     private void gotoMainPage() {
