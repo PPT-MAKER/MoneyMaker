@@ -161,6 +161,12 @@ public class DetailFragment extends Fragment {
                 load(container, position + 1);
             }
         }
+
+        @Override
+        public void setPrimaryItem(@NonNull ViewGroup container, int position, @NonNull Object object) {
+            super.setPrimaryItem(container, position, object);
+            CollectionHelper.history(imgs.get(position));
+        }
     }
 
     private class ViewHolder implements View.OnClickListener {
