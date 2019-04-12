@@ -1,7 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<me.kaelaela.verticalviewpager.VerticalViewPager
-    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:id="@+id/view_pager">
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <me.kaelaela.verticalviewpager.VerticalViewPager
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/view_pager">
 
-</me.kaelaela.verticalviewpager.VerticalViewPager>
+    </me.kaelaela.verticalviewpager.VerticalViewPager>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/change_wallpaper"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="62dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:src="@drawable/change"
+        app:fabCustomSize="48dp"
+        android:clickable="true"/>
+
+</android.support.constraint.ConstraintLayout>

@@ -7,14 +7,15 @@ import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.support.annotation.AnimatorRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.PagerAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewPropertyAnimator;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
@@ -40,12 +41,13 @@ import me.kaelaela.verticalviewpager.transforms.DefaultTransformer;
 /**
  * Created by cb on 2019/4/9.
  */
-public class DetailFragment extends Fragment {
+public class DetailFragment extends Fragment implements View.OnClickListener {
     private static final String PHOTOS = "photots";
 
     private static final String COLLECT = "collect";
 
     private VerticalViewPager viewPager;
+    private FloatingActionButton changeWallPapaerBtn;
     private Adapter adapter;
     private List<String> urls = new ArrayList<>();
 
@@ -63,6 +65,8 @@ public class DetailFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_img_detail, container, false);
+        changeWallPapaerBtn = root.findViewById(R.id.change_wallpaper);
+        changeWallPapaerBtn.setOnClickListener(this);
         viewPager = root.findViewById(R.id.view_pager);
         viewPager.setPageTransformer(false, new DefaultTransformer());
         adapter = new Adapter(getContext(), urls);
@@ -81,10 +85,18 @@ public class DetailFragment extends Fragment {
             try {
                 WallpaperManager manager = WallpaperManager.getInstance(getContext());
                 manager.setBitmap(bitmap);
+                Toast.makeText(getContext(), "壁纸切换成功", Toast.LENGTH_SHORT).show();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    @Override
+    public void onClick(View v) {
+        ViewPropertyAnimator animator = v.animate();
+        animator.rotationBy(360).setDuration(500).start();
+        initSkin();
     }
 
     private class Adapter extends PagerAdapter {
