@@ -64,7 +64,7 @@ public class LoveAnimator extends RelativeLayout {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         long now = System.currentTimeMillis();
-        if (now - lastClickTime > 3000L) {
+        if (now - lastClickTime > 300L) {
             lastClickTime = now;
             return super.onTouchEvent(event);
         }

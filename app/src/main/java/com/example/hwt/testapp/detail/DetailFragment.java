@@ -32,8 +32,10 @@ import com.example.hwt.testapp.R;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import me.kaelaela.verticalviewpager.VerticalViewPager;
 import me.kaelaela.verticalviewpager.transforms.DefaultTransformer;
@@ -50,8 +52,7 @@ public class DetailFragment extends Fragment implements View.OnClickListener {
     private FloatingActionButton changeWallPapaerBtn;
     private Adapter adapter;
     private List<String> urls = new ArrayList<>();
-
-    private Bitmap bitmap;
+    private Map<String, Bitmap> maps = new HashMap<>();
 
     public static Fragment newFragment(ArrayList<String> albumUrl) {
         Bundle bundle = new Bundle();
@@ -81,6 +82,7 @@ public class DetailFragment extends Fragment implements View.OnClickListener {
     }
 
     private void initSkin() {
+        Bitmap bitmap = maps.get(urls.get(viewPager.getCurrentItem()));
         if (bitmap != null) {
             try {
                 WallpaperManager manager = WallpaperManager.getInstance(getContext());
@@ -214,9 +216,7 @@ public class DetailFragment extends Fragment implements View.OnClickListener {
 
                 @Override
                 public boolean onResourceReady(GlideDrawable glideDrawable, String s, Target<GlideDrawable> target, boolean b, boolean b1) {
-                    if (viewPager.getCurrentItem() == position) {
-                        bitmap = drawableToBitmap(glideDrawable);
-                    }
+                    maps.put(s, drawableToBitmap(glideDrawable));
                     showProgress(false);
                     return false;
                 }
