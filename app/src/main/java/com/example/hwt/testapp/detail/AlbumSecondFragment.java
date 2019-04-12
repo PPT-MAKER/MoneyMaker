@@ -9,6 +9,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,12 +40,12 @@ public class AlbumSecondFragment extends Fragment {
 
     private static final String DATA_KEY = "AlbumSecondFragmentData";
 
-    public static Fragment newFragment(List<AlbumBean.AlbumSecondBean> data){
+    public static Fragment newFragment(List<AlbumBean.AlbumSecondBean> data) {
         AlbumSecondFragment fragment = new AlbumSecondFragment();
         Bundle args = new Bundle();
-        args.putSerializable(DATA_KEY,(Serializable) data);
+        args.putSerializable(DATA_KEY, (Serializable) data);
         fragment.setArguments(args);
-        return  fragment;
+        return fragment;
     }
 
     @Nullable
@@ -56,6 +57,24 @@ public class AlbumSecondFragment extends Fragment {
         return view;
     }
 
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        getView().setFocusableInTouchMode(true);
+        getView().requestFocus();
+        getView().setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN) {
+                    getFragmentManager().beginTransaction().remove(AlbumSecondFragment.this).commit();
+                    return true;
+                }
+                return false;
+            }
+        });
+    }
+
     private void initData() {
         mViewAdapter = new ViewAdapter(getContext(), R.layout.item_view, mAlbumBeans);
         mListView.setAdapter(mViewAdapter);
@@ -65,7 +84,7 @@ public class AlbumSecondFragment extends Fragment {
 
     private void initDataSource() {
         List<AlbumBean.AlbumSecondBean> albumSecondBeans = (List<AlbumBean.AlbumSecondBean>) getArguments().getSerializable(DATA_KEY);
-        if(!ListUtil.isEmpty(albumSecondBeans)){
+        if (!ListUtil.isEmpty(albumSecondBeans)) {
             mAlbumBeans.clear();
             mAlbumBeans.addAll(albumSecondBeans);
             mViewAdapter.notifyDataSetChanged();
@@ -87,7 +106,7 @@ public class AlbumSecondFragment extends Fragment {
                     .load(item.getCoverUrl())
                     .asBitmap()
                     .into((ImageView) helper.itemView.findViewById(R.id.coverImg));
-            ((TextView)helper.itemView.findViewById(R.id.title)).setText(item.getName());
+            ((TextView) helper.itemView.findViewById(R.id.title)).setText(item.getName());
             helper.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

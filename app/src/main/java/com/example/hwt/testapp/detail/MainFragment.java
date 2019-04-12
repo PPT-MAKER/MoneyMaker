@@ -9,11 +9,13 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.chad.library.adapter.base.BaseQuickAdapter;
@@ -41,9 +43,12 @@ public class MainFragment extends Fragment {
     List<AlbumBean> mAlbumBeans = new ArrayList<>();
 
     MainActivity activity;
+
     public static MainFragment newFragment() {
         return new MainFragment();
     }
+
+    private long lastBackPressTime;
 
     @Nullable
     @Override
@@ -53,6 +58,29 @@ public class MainFragment extends Fragment {
         activity = (MainActivity) getActivity();
         initData();
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        getView().setFocusableInTouchMode(true);
+        getView().requestFocus();
+        getView().setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN) {
+                    long current = System.currentTimeMillis();
+                    if (current - lastBackPressTime < 2000) {
+                        getActivity().finish();
+                    } else {
+                        lastBackPressTime = current;
+                        Toast.makeText(getActivity(), "再按一次退出", Toast.LENGTH_SHORT).show();
+                    }
+                    return true;
+                }
+                return false;
+            }
+        });
     }
 
     private void initData() {
@@ -79,7 +107,7 @@ public class MainFragment extends Fragment {
                 });
     }
 
-     class ViewAdapter extends BaseQuickAdapter<AlbumBean, BaseViewHolder> {
+    class ViewAdapter extends BaseQuickAdapter<AlbumBean, BaseViewHolder> {
 
         private Context mContext;
 
@@ -94,11 +122,11 @@ public class MainFragment extends Fragment {
                     .load(item.getCoverUrl())
                     .asBitmap()
                     .into((ImageView) helper.itemView.findViewById(R.id.coverImg));
-            ((TextView)helper.itemView.findViewById(R.id.title)).setText(item.getName());
+            ((TextView) helper.itemView.findViewById(R.id.title)).setText(item.getName());
             helper.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    MainFragment.this.getFragmentManager().beginTransaction().add(R.id.fragment_container,AlbumSecondFragment.newFragment(item.getSecondBeans())).commit();
+                    MainFragment.this.getFragmentManager().beginTransaction().add(R.id.fragment_container, AlbumSecondFragment.newFragment(item.getSecondBeans())).commit();
                 }
             });
         }

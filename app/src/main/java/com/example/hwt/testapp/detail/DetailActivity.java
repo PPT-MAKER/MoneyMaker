@@ -40,16 +40,16 @@ public class DetailActivity extends AppCompatActivity {
     @SuppressLint("CheckResult")
     private void initFragments() {
         final ArrayList<String> urls = new ArrayList<>();
-        if(secondBean != null){
+        if (secondBean != null) {
             SpiderService.getPhoto(secondBean.getAlbumHref())
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(new Consumer<List<PhotoBean>>() {
                         @Override
                         public void accept(List<PhotoBean> photoBeans) throws Exception {
-                            if(!ListUtil.isEmpty(photoBeans)){
+                            if (!ListUtil.isEmpty(photoBeans)) {
                                 Iterator<PhotoBean> iterator = photoBeans.iterator();
-                                while(iterator.hasNext()){
+                                while (iterator.hasNext()) {
                                     PhotoBean next = iterator.next();
                                     urls.add(next.getUrl());
                                 }
@@ -63,7 +63,7 @@ public class DetailActivity extends AppCompatActivity {
 
                         }
                     });
-        }else if(photos != null){
+        } else if (photos != null) {
             for (PhotoBean photo : photos) {
                 urls.add(photo.getUrl());
             }
