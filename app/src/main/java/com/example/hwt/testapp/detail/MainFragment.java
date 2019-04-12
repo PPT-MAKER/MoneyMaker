@@ -23,15 +23,19 @@ import com.chad.library.adapter.base.BaseViewHolder;
 import com.example.hwt.testapp.ListUtil;
 import com.example.hwt.testapp.MainActivity;
 import com.example.hwt.testapp.R;
+import com.example.hwt.testapp.SubMenuActivity;
 import com.example.hwt.testapp.spider.beans.AlbumBean;
 import com.example.hwt.testapp.spider.service.SpiderService;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
+
+import static com.example.hwt.testapp.SubMenuActivity.ALBUM_SUB;
 
 
 public class MainFragment extends Fragment {
@@ -126,7 +130,9 @@ public class MainFragment extends Fragment {
             helper.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    MainFragment.this.getFragmentManager().beginTransaction().add(R.id.fragment_container, AlbumSecondFragment.newFragment(item.getSecondBeans())).commit();
+                    Intent intent = new Intent(mContext, SubMenuActivity.class);
+                    intent.putExtra(ALBUM_SUB, (Serializable)item.getSecondBeans());
+                    mContext.startActivity(intent);
                 }
             });
         }

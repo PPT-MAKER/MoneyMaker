@@ -57,24 +57,6 @@ public class AlbumSecondFragment extends Fragment {
         return view;
     }
 
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        getView().setFocusableInTouchMode(true);
-        getView().requestFocus();
-        getView().setOnKeyListener(new View.OnKeyListener() {
-            @Override
-            public boolean onKey(View v, int keyCode, KeyEvent event) {
-                if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN) {
-                    getFragmentManager().beginTransaction().remove(AlbumSecondFragment.this).commit();
-                    return true;
-                }
-                return false;
-            }
-        });
-    }
-
     private void initData() {
         mViewAdapter = new ViewAdapter(getContext(), R.layout.item_view, mAlbumBeans);
         mListView.setAdapter(mViewAdapter);

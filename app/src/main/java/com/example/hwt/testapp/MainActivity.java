@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import com.example.hwt.testapp.Behavior.CollectionHelper;
 import com.example.hwt.testapp.detail.DetailFragment;
+import com.example.hwt.testapp.detail.MainFragment;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,12 +23,21 @@ public class MainActivity extends AppCompatActivity {
 
     private RingProgressBar mRingProgressBar;
 
+    private int state = 1;
+
+    private long lastbackTime = 0L;
+
+    private MainFragment mMainFragment;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mRingProgressBar = (RingProgressBar) findViewById(R.id.progress_bar);
-        getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, com.example.hwt.testapp.detail.MainFragment.newFragment()).commit();
+        if (mMainFragment == null) {
+            mMainFragment = com.example.hwt.testapp.detail.MainFragment.newFragment();
+        }
+        getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, mMainFragment).commit();
     }
 
     @Override
@@ -40,12 +50,18 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.home:
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, com.example.hwt.testapp.detail.MainFragment.newFragment()).commit();
+                state = 1;
+                if (mMainFragment == null) {
+                    mMainFragment = com.example.hwt.testapp.detail.MainFragment.newFragment();
+                }
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, mMainFragment).commit();
                 break;
             case R.id.history:
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,DetailFragment.newFragment(new ArrayList<>(CollectionHelper.getHistoryItems()))).commit();
+                state = 2;
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, DetailFragment.newFragment(new ArrayList<>(CollectionHelper.getHistoryItems()))).commit();
                 break;
             case R.id.collection:
+                state = 2;
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, DetailFragment.newFragment(new ArrayList<>(CollectionHelper.getCollectItems()))).commit();
                 break;
             case R.id.clean:
@@ -77,5 +93,22 @@ public class MainActivity extends AppCompatActivity {
 
     Handler mHandler = new Handler();
 
+    private void back() {
+        if (System.currentTimeMillis() - lastbackTime < 2000L) {
+            finish();
+        } else {
+            lastbackTime = System.currentTimeMillis();
+            Toast.makeText(this, "再次返回可退出", Toast.LENGTH_SHORT).show();
+        }
+    }
 
+    @Override
+    public void onBackPressed() {
+        if (state == 1) {
+            back();
+        } else {
+            state = 1;
+            getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, mMainFragment).commit();
+        }
+    }
 }
