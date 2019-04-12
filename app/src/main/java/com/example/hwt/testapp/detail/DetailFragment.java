@@ -7,6 +7,7 @@ import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.annotation.AnimatorRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -14,6 +15,8 @@ import android.support.v4.view.PagerAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -25,17 +28,12 @@ import com.bumptech.glide.request.target.Target;
 import com.example.hwt.testapp.Behavior.CollectionHelper;
 import com.example.hwt.testapp.Behavior.LoveAnimator;
 import com.example.hwt.testapp.R;
-import com.example.hwt.testapp.spider.beans.PhotoBean;
-import com.example.hwt.testapp.spider.service.SpiderService;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.functions.Consumer;
-import io.reactivex.schedulers.Schedulers;
 import me.kaelaela.verticalviewpager.VerticalViewPager;
 import me.kaelaela.verticalviewpager.transforms.DefaultTransformer;
 
@@ -49,8 +47,6 @@ public class DetailFragment extends Fragment {
 
     private VerticalViewPager viewPager;
     private Adapter adapter;
-    private ProgressBar progressBar;
-
     private List<String> urls = new ArrayList<>();
 
     private Bitmap bitmap;
@@ -67,7 +63,6 @@ public class DetailFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_img_detail, container, false);
-        progressBar = root.findViewById(R.id.progress);
         viewPager = root.findViewById(R.id.view_pager);
         viewPager.setPageTransformer(false, new DefaultTransformer());
         adapter = new Adapter(getContext(), urls);
@@ -79,12 +74,6 @@ public class DetailFragment extends Fragment {
             adapter.notifyDataSetChanged();
         }
         return root;
-    }
-
-    private void showProgress(boolean show) {
-        if (null != progressBar) {
-            progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
-        }
     }
 
     private void initSkin() {
@@ -176,11 +165,13 @@ public class DetailFragment extends Fragment {
         private LoveAnimator mLoveAnimator;
         private String url;
         private boolean isCollected;
+        private ProgressBar progressBar;
 
         public ViewHolder(View view) {
             this.root = view;
             this.contentView = root.findViewById(R.id.content);
             this.collectBtn = root.findViewById(R.id.collect_btn);
+            this.progressBar = root.findViewById(R.id.progress);
             this.mLoveAnimator = root.findViewById(R.id.loveanimator);
             this.mLoveAnimator.setCollectAHelper(new LoveAnimator.CollectAHelper() {
                 @Override
@@ -196,20 +187,16 @@ public class DetailFragment extends Fragment {
         }
 
         public void bind(final String url, final int position) {
-            if (viewPager.getCurrentItem() == position) {
-                showProgress(true);
-            }
+            showProgress(true);
             this.url = url;
             isCollected = CollectionHelper.isCollected(url);
             Glide.with(root.getContext()).load(url).listener(new RequestListener<String, GlideDrawable>() {
                 @Override
                 public boolean onException(Exception e, String s, Target<GlideDrawable> target, boolean b) {
                     Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                    if (viewPager.getCurrentItem() == position) {
-                        showProgress(false);
-                    }
                     urls.remove(url);
                     adapter.notifyDataSetChanged();
+                    showProgress(false);
                     return false;
                 }
 
@@ -217,8 +204,8 @@ public class DetailFragment extends Fragment {
                 public boolean onResourceReady(GlideDrawable glideDrawable, String s, Target<GlideDrawable> target, boolean b, boolean b1) {
                     if (viewPager.getCurrentItem() == position) {
                         bitmap = drawableToBitmap(glideDrawable);
-                        showProgress(false);
                     }
+                    showProgress(false);
                     return false;
                 }
             }).into(contentView);
@@ -226,6 +213,35 @@ public class DetailFragment extends Fragment {
                     .getResources()
                     .getDrawable(getCollectDrawable(isCollected)));
 
+        }
+
+        private void showProgress(boolean show) {
+            if (null != progressBar) {
+                if (show) {
+                    progressBar.setVisibility(View.VISIBLE);
+                    Animation fadeIn = AnimationUtils.loadAnimation(getContext(), android.R.anim.fade_in);
+                    progressBar.startAnimation(fadeIn);
+                } else {
+                    Animation fadeOut = AnimationUtils.loadAnimation(getContext(), android.R.anim.fade_out);
+                    fadeOut.setAnimationListener(new Animation.AnimationListener() {
+                        @Override
+                        public void onAnimationStart(Animation animation) {
+
+                        }
+
+                        @Override
+                        public void onAnimationEnd(Animation animation) {
+                            progressBar.setVisibility(View.GONE);
+                        }
+
+                        @Override
+                        public void onAnimationRepeat(Animation animation) {
+
+                        }
+                    });
+                    progressBar.startAnimation(fadeOut);
+                }
+            }
         }
 
         @Override
@@ -247,16 +263,16 @@ public class DetailFragment extends Fragment {
             return root;
         }
 
-        private Bitmap drawableToBitmap (Drawable drawable) {
+        private Bitmap drawableToBitmap(Drawable drawable) {
             Bitmap bitmap = null;
             if (drawable instanceof BitmapDrawable) {
                 BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
-                if(bitmapDrawable.getBitmap() != null) {
+                if (bitmapDrawable.getBitmap() != null) {
                     return bitmapDrawable.getBitmap();
                 }
             }
 
-            if(drawable.getIntrinsicWidth() <= 0 || drawable.getIntrinsicHeight() <= 0) {
+            if (drawable.getIntrinsicWidth() <= 0 || drawable.getIntrinsicHeight() <= 0) {
                 bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888); // Single color bitmap will be created of 1x1 pixel
             } else {
                 bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
