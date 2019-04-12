@@ -202,6 +202,8 @@ public class DetailFragment extends Fragment {
                     if (viewPager.getCurrentItem() == position) {
                         showProgress(false);
                     }
+                    urls.remove(url);
+                    adapter.notifyDataSetChanged();
                     return false;
                 }
 
