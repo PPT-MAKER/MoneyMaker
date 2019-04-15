@@ -82,14 +82,17 @@ public class DetailFragment extends Fragment implements View.OnClickListener {
     }
 
     private void initSkin() {
-        Bitmap bitmap = maps.get(urls.get(viewPager.getCurrentItem()));
-        if (bitmap != null) {
-            try {
-                WallpaperManager manager = WallpaperManager.getInstance(getContext());
-                manager.setBitmap(bitmap);
-                Toast.makeText(getContext(), "壁纸切换成功", Toast.LENGTH_SHORT).show();
-            } catch (IOException e) {
-                e.printStackTrace();
+        int index = viewPager.getCurrentItem();
+        if (index >= 0 && index < urls.size()) {
+            Bitmap bitmap = maps.get(urls.get(viewPager.getCurrentItem()));
+            if (bitmap != null) {
+                try {
+                    WallpaperManager manager = WallpaperManager.getInstance(getContext());
+                    manager.setBitmap(bitmap);
+                    Toast.makeText(getContext(), "壁纸切换成功", Toast.LENGTH_SHORT).show();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
