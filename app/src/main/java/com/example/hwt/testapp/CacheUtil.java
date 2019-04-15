@@ -13,8 +13,6 @@ public class CacheUtil {
     private SharedPreferences mSharedPreferences;
     private Gson gson = new Gson();
 
-    public static String TAG = "CacheUtil";
-
     private static class StaticInner {
         private static CacheUtil spUtil = new CacheUtil();
     }
@@ -29,12 +27,10 @@ public class CacheUtil {
 
     public synchronized void cacheObject(String key, Object value) {
         mSharedPreferences.edit().putString(key, gson.toJson(value)).commit();
-        Log.e(TAG, "cacheObject\n key="+ key + " value =" + value);
     }
 
     public synchronized Object getObject(String key, Type type) {
         String string = mSharedPreferences.getString(key, "");
-        Log.e(TAG, "getObject from cache: " + string);
         return gson.fromJson(string, type);
     }
 }
